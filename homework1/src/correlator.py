@@ -1,9 +1,8 @@
-import numpy as np
-from typing import Callable
-from pandas import DataFrame
-from pandas.api.types import is_numeric_dtype
-from scipy.stats import pearsonr, spearmanr, kendalltau
 from itertools import combinations
+from typing import Callable
+import numpy as np
+import pandas as pd
+from scipy.stats import pearsonr, spearmanr, kendalltau
 
 
 def pearson_fn(X: np.array, Y: np.array):
@@ -16,34 +15,38 @@ def kendall_fn(X: np.array, Y: np.array):
     return kendalltau(X, Y).statistic
 
 class Correlator:
-    df: DataFrame
-    column_pairs: list[(str,str)]
-    def __init__(self, df: DataFrame):
+    df: pd.DataFrame
+    feature_pairs: list[(str,str)]
+    def __init__(self, df: pd.DataFrame):
         self.df = df
-        self.column_pairs = self.__compute_feature_pairs()
+        self.feature_pairs = self.__compute_feature_pairs()
         pass
 
     def __compute_feature_pairs(self):
         # filters pairs by types, must be numeric
-        columns = [ column for column in self.df.columns if is_numeric_dtype(self.df[column])]
+        columns = [ column for column in self.df.columns if pd.api.types.is_numeric_dtype(self.df[column])]
         # create the combination set of pairs
         column_pairs = list(combinations(columns, 2))
         return column_pairs
     
     def run(self, correlationFn: Callable[[np.array, np.array], float])->dict[tuple, float]:
         return {
-            (X,Y): pearson_fn(self.df[X].array, self.df[Y].array) for (X,Y) in self.column_pairs 
+            (X,Y): correlationFn(self.df[X].array, self.df[Y].array) for (X,Y) in self.feature_pairs 
         }
-            
+    # merge correlation results
+    def merge_correlation_results(self, **correlation_runs):
+        correlation_keys = correlation_runs.keys()
+        features_correlation_dict = { feature: dict() for feature in self.feature_pairs }
+        for method, correlation_results in correlation_runs.items():
+            for feature_pairs, value in correlation_results.items():
+                features_correlation_dict[feature_pairs][method] = value
+        flattened_fcd_data = [
+            ( features, *[results[key] for key in correlation_keys] ) for (features, results) in features_correlation_dict.items()
+        ]
+        result_df = pd.DataFrame(
+            data = flattened_fcd_data,
+            columns = ( "Features", *correlation_keys )
+        ).set_index("Features")
         
-
-if __name__== '__main__':
-    from utils import top_dict_pairs, correlation_score_table
-
-    from sklearn.datasets import load_wine
-    df = load_wine( as_frame=True ).data
-    correlator = Correlator(df)
-    pearson_result = correlator.run(kendall_fn)
-    print(top_dict_pairs(pearson_result, 3))
-    print(correlation_score_table(pearson=top_dict_pairs(pearson_result, 3)))
+        return result_df
 
