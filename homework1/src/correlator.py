@@ -36,17 +36,24 @@ class Correlator:
     # merge correlation results
     def merge_correlation_results(self, **correlation_runs):
         correlation_keys = correlation_runs.keys()
-        features_correlation_dict = { feature: dict() for feature in self.feature_pairs }
-        for method, correlation_results in correlation_runs.items():
-            for feature_pairs, value in correlation_results.items():
-                features_correlation_dict[feature_pairs][method] = value
-        flattened_fcd_data = [
-            ( features, *[results[key] for key in correlation_keys] ) for (features, results) in features_correlation_dict.items()
-        ]
+        features_correlation_dict = self.compute_features_correlation_dict(correlation_runs)
+        flattened_fcd_data = self.flatten_fcd_data(correlation_keys, features_correlation_dict)
         result_df = pd.DataFrame(
             data = flattened_fcd_data,
             columns = ( "Features", *correlation_keys )
         ).set_index("Features")
         
         return result_df
+
+    def flatten_fcd_data(self, correlation_keys, features_correlation_dict):
+        return [
+            ( features, *[results[key] for key in correlation_keys] ) for (features, results) in features_correlation_dict.items()
+        ]
+
+    def compute_features_correlation_dict(self, correlation_runs):
+        features_correlation_dict = { feature: dict() for feature in self.feature_pairs }
+        for method, correlation_results in correlation_runs.items():
+            for feature_pairs, value in correlation_results.items():
+                features_correlation_dict[feature_pairs][method] = value
+        return features_correlation_dict
 
