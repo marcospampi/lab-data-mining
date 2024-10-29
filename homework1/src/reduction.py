@@ -1,11 +1,7 @@
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA, TruncatedSVD
 
-
-def standardized(df: pd.DataFrame):
-  scaler = StandardScaler()
-  return pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
+from .normalization import standardized
 
 def compute_pca(df: pd.DataFrame, n: int = 3, std: bool = True) -> pd.DataFrame:
   df = standardized(df) if std else df
