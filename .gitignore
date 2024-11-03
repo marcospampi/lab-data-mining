@@ -166,3 +166,4 @@ nogit/
 *.csv
 *.zip
 *.nogit.*
+.env
