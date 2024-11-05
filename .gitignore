@@ -163,6 +163,8 @@ cython_debug/
 
 
 nogit/
+cache/
+out/
 *.csv
 *.zip
 *.nogit.*
