@@ -1,22 +1,30 @@
 import pandas as pd
+from mlxtend.preprocessing import TransactionEncoder
 
-def item_cross_trx(trx_df: pd.DataFrame, *, min_support = 0.2) -> pd.DataFrame:
-    supported_trx_df = extract_min_support(trx_df, min_support)
-    
-    cross_trx_df = (
-        pd.crosstab(supported_trx_df.index, supported_trx_df['cod_prod'])
-        .astype('bool')
+def to_sparse(trx_df: pd.DataFrame) -> pd.DataFrame:
+    trx_ss = _create_trx_series(trx_df)
+
+    df = _fit_and_transform_sparse(trx_ss)
+
+    return df
+
+def _fit_and_transform_sparse(trx_ss):
+    te = TransactionEncoder()
+    te_ary = te.fit(trx_ss).transform(trx_ss)
+    df = pd.DataFrame(te_ary, columns=te.columns_)
+    return df
+
+def _create_trx_series(trx_df):
+    trx_ss = (
+        trx_df
+            .groupby(by=['scontrino_id'])[trx_df.columns[0]]
+            .agg(frozenset)
     )
-    return cross_trx_df
 
-def extract_min_support(trx_df, min_support):
-    supported_ss = (
-        trx_df['cod_prod']
-            .value_counts(normalize=True)
-    )
-    supported_ss = supported_ss[supported_ss > min_support ]
-    supported_trx_df = trx_df[trx_df['cod_prod'].isin(supported_ss.index)]
-    return supported_trx_df
+    return trx_ss
 
+def resolve_descriptions(rules_df: pd.DataFrame, categories_df: pd.DataFrame) -> pd.DataFrame:
+    extract = lambda e: ', '.join(categories_df['descr'].loc[e])
+    return rules_df['antecedents'].map( extract ) + ' => ' + rules_df['consequents'].map(extract)
 
 

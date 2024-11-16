@@ -1,9 +1,13 @@
-from dataclasses import dataclass
 import os
 import pandas as pd
-
+from dataclasses import dataclass
+from dotenv import load_dotenv
 from .preprocess import Preprocess
 
+
+# loads environment variables from .env
+load_dotenv()
+dataset_path = os.getenv('TASK_DATASET_FILE_PATH')
 
 
 @dataclass
@@ -32,7 +36,7 @@ class Cache:
 class CacheManager:
     _cache: Cache
 
-    def __init__(self, source_path: str):
+    def __init__(self, source_path: str = dataset_path):
         if not self._try_load_cache_files(source_path):
             self._cache = self._create_cache(source_path)
             self._cache.dump(os.path.dirname(source_path))

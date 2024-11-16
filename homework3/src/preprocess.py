@@ -16,7 +16,7 @@ interesting_columns = [
 
 transaction_columns = ["scontrino_id", "cod_prod"]
 
-category_columns = ["id", "descr"]
+category_columns = ["id", "descr", "parent"]
 item_columns = ["cod_prod", "descr_prod", "liv1", "liv2", "liv3", "liv4"]
 
 
@@ -63,8 +63,10 @@ class Preprocess:
         def extract_level(df: pd.DataFrame, n: int) -> pd.DataFrame:
             extract_columns = [f"liv{n}", f"descr_liv{n}"]
             rename_columns = dict(zip(extract_columns, category_columns))
-            df = df[extract_columns].rename(columns=rename_columns)
-            return df
+            result_df = df[extract_columns].rename(columns=rename_columns)
+            if n > 1:
+                result_df['parent'] = df[f"liv{n - 1}"].astype('int32')
+            return result_df
 
         result = (
             pd.concat([extract_level(self.df, n + 1) for n in range(0, 4)])

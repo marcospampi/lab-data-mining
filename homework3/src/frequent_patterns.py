@@ -6,29 +6,24 @@ from mlxtend.frequent_patterns import apriori, fpgrowth, association_rules
 class FrequentItemsets:
     df: pd.DataFrame
     name: str
-    def __init__(self, name: str, df: pd.DataFrame):
-        self.name = name
+    def __init__(self, df: pd.DataFrame):
         self.df = df
-        self.df[name] = True
     
     def compare(self, other) -> pd.DataFrame:
         result = (
             self.df
             .merge(other.df, how='outer', on='itemsets')
             .reindex()
-        )
-        result[other.name] = result[other.name].fillna(False)
-        result[self.name] = result[self.name].fillna(False)
+        )       
+        return FrequentItemsets(result[['itemsets', 'support_x', 'support_y']])
 
-        result = result.rename(columns= {
-            'support_x': f'support_{self.name}',
-            'support_y': f'support_{other.name}'
-        })
+    def extract_rules(self,*, metric = 'confidence', min_threshold=.7, support_by: Literal['left', 'right'] = 'left') -> pd.DataFrame:
+        tmp_df = self.df
+        if not 'support' in self.df.columns:
+            support_col_name = 'support_x' if support_by == 'left' else 'support_y'
+            tmp_df = tmp_df[['itemsets', support_col_name ]].rename(columns={support_col_name: 'support'})
         
-        return result
-
-    def extract_rules(self,*, metric = 'confidence', min_threshold=.7) -> pd.DataFrame:
-        rules_df = association_rules(self.df, metric=metric, min_threshold=min_threshold)
+        rules_df = association_rules(tmp_df, metric=metric, min_threshold=min_threshold)
         return rules_df
 
 class FrequentPatternAlgorithm(ABC):
@@ -42,11 +37,15 @@ class FrequentPatternAlgorithm(ABC):
 
 
 class AprioriAlgorithm(FrequentPatternAlgorithm):
+   low_memory = False
    def run(self, min_support = 0.2) -> FrequentItemsets:
-        result = apriori(self.df, min_support=min_support, low_memory=True, use_colnames=True)
-        return FrequentItemsets('apriori',result)
+        result = apriori(self.df, min_support=min_support, low_memory=self.low_memory, use_colnames=True)
+        return FrequentItemsets(result)
+
+class AprioriLowMemAlgorithm(AprioriAlgorithm):
+   low_memory = True
 
 class FpGrowthAlgorithm(FrequentPatternAlgorithm):
    def run(self, min_support = 0.2) -> FrequentItemsets:
         result = fpgrowth(self.df, min_support=min_support, use_colnames=True)
-        return FrequentItemsets('fpgrowth',result)
+        return FrequentItemsets(result)
