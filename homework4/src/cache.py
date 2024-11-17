@@ -9,11 +9,11 @@ class CachedDataFrame:
         self.path = path
     
     def load(self) -> Self:
-        self.df = pd.read_pickle(self.path)
+        self.df = pd.read_pickle(self.path, compression='gzip')
         return self
     
     def store(self) -> Self:
-        self.df.to_pickle(self.path)
+        self.df.to_pickle(self.path, compression='gzip')
         return self
     
     def get(self) -> pd.DataFrame:
@@ -23,8 +23,8 @@ class CachedDataFrame:
         self.df = df
         return self
 
-def cache_factory(path: str, *, df_factory: Callable[[],pd.DataFrame] ) -> CachedDataFrame:
+def cached(path: str, *, construct: Callable[[],pd.DataFrame] ) -> CachedDataFrame:
     try:
         return CachedDataFrame(path).load()
     except FileNotFoundError:
-        return CachedDataFrame(path).set(df_factory()).store()
+        return CachedDataFrame(path).set(construct()).store()

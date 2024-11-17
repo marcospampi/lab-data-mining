@@ -3,22 +3,25 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 
-interesting_columns = [
-    "scontrino_id",
-    "cod_prod",
-    "descr_prod",
-    "liv1",
-    "liv2",
-    "liv3",
-    "liv4",
-    "descr_liv1",
-    "descr_liv2",
-    "descr_liv3",
-    "descr_liv4",
-]
+interesting_columns = {
+    "scontrino_id": 'int64',
+    "tessera": 'int64',
+    "cod_prod": 'int64',
+    "descr_prod": 'str',
+    "liv1": 'int64',
+    "liv2": 'int64',
+    "liv3": 'int64',
+    "liv4": 'int64',
+    "descr_liv1": 'str',
+    "descr_liv2": 'str',
+    "descr_liv3": 'str',
+    "descr_liv4": 'str',
+}
+
 transaction_columns = ["scontrino_id","tessera","cod_prod"]
 category_columns = ["id", "descr"]
 item_columns = ["cod_prod", "descr_prod", "liv1", "liv2", "liv3", "liv4"]
+
 
 class Preprocess(ABC):
     df: pd.DataFrame
@@ -28,6 +31,7 @@ class Preprocess(ABC):
     @abstractmethod
     def run(self) -> pd.DataFrame:
         return self.df
+
 
 
 class PreprocessItems(Preprocess):
@@ -68,10 +72,9 @@ class PreprocessCategories(Preprocess):
 class PreprocessItemCustomerFrequencyMatrix(Preprocess):
     def run(self) -> pd.DataFrame:
         trx_df = PreprocessTransactions(self.df).run()
-        
         return pd.crosstab(trx_df['tessera'], trx_df['cod_prod'])
 
 if __name__ == '__main__':
-    src_df = pd.read_csv("/home/marco/Scrivania/uni/datamining/etc/AnonymizedFidelity.csv")
+    src_df = pd.read_csv("/home/marco/Scrivania/uni/datamining/lab-data-mining/nogit/AnonymizedFidelity.csv")
     crosstab = PreprocessItemCustomerFrequencyMatrix(src_df).run()
     print(crosstab)
