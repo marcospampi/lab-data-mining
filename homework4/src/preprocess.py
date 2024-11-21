@@ -8,6 +8,7 @@ interesting_columns = {
     "tessera": 'int64',
     "cod_prod": 'int64',
     "descr_prod": 'str',
+    'r_qta_pezzi': 'int64',
     "liv1": 'int64',
     "liv2": 'int64',
     "liv3": 'int64',
