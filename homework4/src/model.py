@@ -13,7 +13,7 @@ class ModelFamily:
     init: Union[Literal['k-means++'], Literal['random']] = 'k-means++'
     max_iter: Optional[int] = 300
     df: pd.DataFrame
-    seed: int = 1234
+    seed: int = np.random.randint(0,2**24)
 
     pca_df: Optional[pd.DataFrame]
 

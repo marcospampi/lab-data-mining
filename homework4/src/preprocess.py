@@ -75,6 +75,11 @@ class PreprocessItemCustomerFrequencyMatrix(Preprocess):
         trx_df = PreprocessTransactions(self.df).run()
         return pd.crosstab(trx_df['tessera'], trx_df['cod_prod'])
 
+class PreprocessCustomers(Preprocess):
+    def run(self) -> pd.DataFrame:
+        trx_df = PreprocessTransactions(self.df).run()
+        return pd.crosstab(trx_df['tessera'], trx_df['cod_prod'])
+
 if __name__ == '__main__':
     src_df = pd.read_csv("/home/marco/Scrivania/uni/datamining/lab-data-mining/nogit/AnonymizedFidelity.csv")
     crosstab = PreprocessItemCustomerFrequencyMatrix(src_df).run()
