@@ -167,5 +167,6 @@ cache/
 out/
 *.csv
 *.zip
-*.nogit.*
+*.nogit*
+
 .env
